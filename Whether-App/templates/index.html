@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AeroCast - Premium Weather Dashboard</title>
+    <!-- Google Fonts: Outfit (headings) and Inter (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.5">
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='app.js') }}?v=1.5" defer></script>
+</head>
+<body class="theme-sunny">
+    <!-- Dynamic background overlays for animations (e.g. rain, snow, clouds) -->
+    <div class="weather-bg-animation" id="bgAnimation"></div>
+    <div class="overlay"></div>
+
+    <div class="app-container">
+        <!-- Dashboard Wrapper -->
+        <main class="dashboard glass-card">
+            
+            <!-- Dashboard Header: Brand, Search, Options -->
+            <header class="dashboard-header">
+                <div class="brand">
+                    <i class="fa-solid fa-wind brand-icon"></i>
+                    <h1>AeroCast</h1>
+                </div>
+
+                <div class="search-section">
+                    <form id="searchForm" autocomplete="off">
+                        <div class="search-input-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="searchInput" placeholder="Search city or ZIP code..." aria-label="Search city">
+                            <button type="button" id="locateBtn" class="action-btn" title="Locate Me">
+                                <i class="fa-solid fa-location-crosshairs"></i>
+                            </button>
+                        </div>
+                        <ul id="suggestionsList" class="suggestions-list hidden"></ul>
+                    </form>
+                </div>
+
+                <div class="controls-section">
+                    <div class="unit-toggle">
+                        <span class="unit-label active" id="unitC">°C</span>
+                        <label class="switch">
+                            <input type="checkbox" id="unitToggle">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="unit-label" id="unitF">°F</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Error Banner -->
+            <div id="errorBanner" class="error-banner hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span id="errorMessage">Error loading data. Please try again.</span>
+                <button id="closeErrorBtn" class="close-error"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Loader -->
+            <div id="loader" class="loader-wrapper hidden">
+                <div class="spinner"></div>
+                <p>Fetching forecast...</p>
+            </div>
+
+            <!-- Dashboard Content Layout -->
+            <div class="dashboard-content" id="dashboardContent">
+                
+                <!-- Left Panel: Major Current Weather -->
+                <section class="current-weather-panel glass-card">
+                    <div class="location-details">
+                        <h2 id="locationName">Loading...</h2>
+                        <p id="currentDate">--</p>
+                    </div>
+
+                    <div class="current-main">
+                        <div class="weather-art" id="weatherArt">
+                            <!-- SVG weather icon dynamically loaded -->
+                        </div>
+                        <div class="temp-display">
+                            <span class="temp-number" id="currentTemp">--</span>
+                            <span class="temp-degree">°</span>
+                        </div>
+                    </div>
+
+                    <div class="current-condition-text" id="weatherDesc">--</div>
+                    
+                    <div class="divider"></div>
+
+                    <div class="quick-stats">
+                        <div class="quick-stat-item">
+                            <i class="fa-solid fa-temperature-half"></i>
+                            <div>
+                                <small>Feels Like</small>
+                                <p id="feelsLike">--</p>
+                            </div>
+                        </div>
+                        <div class="quick-stat-item">
+                            <i class="fa-solid fa-droplet"></i>
+                            <div>
+                                <small>Precipitation</small>
+                                <p id="precipProb">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Area: Details Grid + Forecasts -->
+                <div class="forecasts-and-details">
+                    
+                    <!-- Weather Details Grid -->
+                    <section class="details-section">
+                        <h3>Today's Highlights</h3>
+                        <div class="details-grid">
+                            
+                            <!-- Humidity Card -->
+                            <div class="detail-card glass-card">
+                                <div class="detail-header">
+                                    <span>Humidity</span>
+                                    <i class="fa-solid fa-droplet icon-humidity"></i>
+                                </div>
+                                <div class="detail-value" id="humidityVal">--</div>
+                                <div class="detail-info">
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" id="humidityProgress" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wind Card -->
+                            <div class="detail-card glass-card">
+                                <div class="detail-header">
+                                    <span>Wind Status</span>
+                                    <i class="fa-solid fa-wind icon-wind"></i>
+                                </div>
+                                <div class="detail-value" id="windVal">--</div>
+                                <div class="detail-info wind-direction">
+                                    <i class="fa-solid fa-circle-chevron-up compass-arrow" id="windCompass"></i>
+                                    <span id="windDirText">--</span>
+                                </div>
+                            </div>
+
+                            <!-- UV Index Card -->
+                            <div class="detail-card glass-card">
+                                <div class="detail-header">
+                                    <span>UV Index</span>
+                                    <i class="fa-solid fa-sun icon-uv"></i>
+                                </div>
+                                <div class="detail-value" id="uvVal">--</div>
+                                <div class="detail-info" id="uvDesc">--</div>
+                            </div>
+
+                            <!-- Sunrise/Sunset Card -->
+                            <div class="detail-card glass-card">
+                                <div class="detail-header">
+                                    <span>Sunrise & Sunset</span>
+                                    <i class="fa-solid fa-circle-half-stroke icon-sunsets"></i>
+                                </div>
+                                <div class="sun-times-wrapper">
+                                    <div class="sun-time">
+                                        <i class="fa-solid fa-arrow-up-long rise-icon"></i>
+                                        <div>
+                                            <small>Sunrise</small>
+                                            <p id="sunriseVal">--</p>
+                                        </div>
+                                    </div>
+                                    <div class="sun-time">
+                                        <i class="fa-solid fa-arrow-down-long set-icon"></i>
+                                        <div>
+                                            <small>Sunset</small>
+                                            <p id="sunsetVal">--</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Air Pressure Card -->
+                            <div class="detail-card glass-card">
+                                <div class="detail-header">
+                                    <span>Air Pressure</span>
+                                    <i class="fa-solid fa-gauge icon-pressure"></i>
+                                </div>
+                                <div class="detail-value" id="pressureVal">--</div>
+                                <div class="detail-info" id="pressureDesc">--</div>
+                            </div>
+
+                            <!-- Cloud Cover Card -->
+                            <div class="detail-card glass-card">
+                                <div class="detail-header">
+                                    <span>Cloudiness</span>
+                                    <i class="fa-solid fa-cloud icon-clouds"></i>
+                                </div>
+                                <div class="detail-value" id="cloudVal">--</div>
+                                <div class="detail-info">
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" id="cloudProgress" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    <!-- Hourly Forecast -->
+                    <section class="forecast-section">
+                        <div class="section-header">
+                            <h3>Hourly Forecast</h3>
+                            <span class="header-hint">Next 24 Hours</span>
+                        </div>
+                        <div class="hourly-forecast-container scroll-container" id="hourlyForecast">
+                            <!-- Hourly card elements dynamically populated -->
+                        </div>
+                    </section>
+
+                    <!-- Weekly Forecast -->
+                    <section class="forecast-section">
+                        <h3>7-Day Forecast</h3>
+                        <div class="weekly-forecast-container glass-card" id="weeklyForecast">
+                            <!-- Weekly list rows dynamically populated -->
+                        </div>
+                    </section>
+
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+</body>
+</html>
